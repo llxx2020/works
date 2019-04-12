@@ -109,12 +109,6 @@ public class BaiDuActivity extends Activity {
 
         initPermission();
 
-        //---------luaTest--------
-        TextView textView = findViewById(R.id.details_text);
-        luaTest(textView);
-        Log.e("-------", (String) textView.getText());
-        //-------------------------
-
 
         if (!checkFloatWindowPermission(this)) {
             Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
@@ -209,25 +203,4 @@ public class BaiDuActivity extends Activity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-
-    //-------------luaTest----------------
-    public void luaTest(TextView textView){
-        LuaState lua = null;
-        lua = LuaStateFactory.newLuaState();
-        if (lua == null) {
-            textView.setText("newLuaState false");
-            return;
-        }
-        lua.openLibs();
-        lua.LdoString(luaUtils.readAssetsTxt(this, "test.lua"));
-
-        new MyJavaFunction(lua).register();
-
-        lua.getGlobal("setText");
-        lua.pushJavaObject(textView);
-        lua.pushString("\nHello Lua");
-
-        lua.pcall(2, 0, 0);
-    }
-    //----------------------------------------------
 }

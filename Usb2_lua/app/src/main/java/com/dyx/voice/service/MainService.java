@@ -67,6 +67,8 @@ import com.dyx.voice.activity.BaiDuActivity;
 import com.dyx.voice.activity.MovieActivity;
 import com.dyx.voice.bridge.EffectNoDrawBridge;
 import com.dyx.voice.inter.Volume;
+import com.dyx.voice.lua.MyJavaFunction;
+import com.dyx.voice.lua.luaUtils;
 import com.dyx.voice.view.ListViewTV;
 import com.dyx.voice.view.MainUpView;
 import com.loopj.android.http.AsyncHttpClient;
@@ -76,12 +78,15 @@ import com.loopj.android.http.MySSLSocketFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.keplerproject.luajava.LuaState;
+import org.keplerproject.luajava.LuaStateFactory;
 
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -101,6 +106,8 @@ import cz.msebera.android.httpclient.params.HttpConnectionParams;
 import cz.msebera.android.httpclient.params.HttpParams;
 import cz.msebera.android.httpclient.params.HttpProtocolParams;
 import cz.msebera.android.httpclient.protocol.HTTP;
+
+import static com.dyx.voice.lua.luaUtils.getLuaMap;
 
 public class MainService extends Service {
 
@@ -134,6 +141,8 @@ public class MainService extends Service {
     private String secretKey = "CveL4xdBB894eFBXD7Dl4TP5kISIxGap";
 
     private AsyncHttpClient asyncHttpClient;
+
+    private Map<String,String> luaMap;
 
     //不与Activity进行绑定.
     @Override
@@ -376,7 +385,14 @@ public class MainService extends Service {
                                             final String novelName = object1.optString("name");
                                             String getNovelS = "";
                                             if (!novelName.equals("")) {
-                                                getNovelS = "/actor_" + novelName;
+                                                //----------lua------------
+                                                if(luaMap.get(novelName) !=  null){
+                                                    getNovelS = "/" + luaMap.get(novelName) +"_" + novelName;
+                                                }else{
+                                                    getNovelS = "/actor_" + novelName;
+                                                }
+
+                                                //--------------------------
                                             }
                                             getNovelS = getNovelS + "/input_" + novelName + ".dat";
                                             System.out.println("getNovelS:" + getNovelS);
@@ -822,6 +838,11 @@ public class MainService extends Service {
         windowManager = (WindowManager) getApplication().getSystemService(Context.WINDOW_SERVICE);
 
         asr = EventManagerFactory.create(getApplicationContext(), "asr");
+
+        //luaMap
+        luaMap = new HashMap<>();
+        luaMap = getLuaMap(luaMap,asyncHttpClient);
+
     }
 
     private void initIntent() {

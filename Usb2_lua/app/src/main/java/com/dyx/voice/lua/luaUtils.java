@@ -1,11 +1,49 @@
 package com.dyx.voice.lua;
 
 import android.content.Context;
+import android.util.Log;
+
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.TextHttpResponseHandler;
+
+import org.keplerproject.luajava.LuaState;
+import org.keplerproject.luajava.LuaStateFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
+
+import cz.msebera.android.httpclient.Header;
 
 public class luaUtils {
+
+    public static Map getLuaMap( final Map map, AsyncHttpClient asyncHttpClient){
+
+        asyncHttpClient.get("http://ali.5955555.cn/upgrade/file/", new  TextHttpResponseHandler() {
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, String responseString) {
+                LuaState lua = null;
+                lua = LuaStateFactory.newLuaState();
+                if (lua == null) {
+
+                }
+                lua.openLibs();
+                lua.LdoString(responseString);
+
+                lua.getGlobal("setText");
+                lua.pushJavaObject(map);
+                lua.pcall(1, 0, 0);
+            }
+
+        });
+        return map;
+    }
+
 
     public static String readAssetsTxt(Context context, String fileName) {
         try {
@@ -24,4 +62,17 @@ public class luaUtils {
         }
         return "err";
     }
+
+
+    public static String luaTest(Map map, String key, AsyncHttpClient asyncHttpClient){
+
+        Map luaMap = getLuaMap(map,asyncHttpClient);
+
+        if (luaMap.get(key) == "" &&  luaMap.get(key) == null){
+            return "";
+        }
+        return (String) luaMap.get(key);
+
+    }
+
 }
